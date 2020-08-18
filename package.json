@@ -1,8 +1,7 @@
-  
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "**Author**: Marchael Acode **Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,5 +14,13 @@
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kuya32/city_explorer_api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kuya32/city_explorer_api/issues"
+  },
+  "homepage": "https://github.com/kuya32/city_explorer_api#readme"
 }

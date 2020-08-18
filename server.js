@@ -14,33 +14,34 @@
 // 7. tell the server to listen on the port
 // 8. start writing routes to handle requests from the client
 
-// // ================ Packages =======================
+// ================ Packages =======================
 
-// const express = require('express');
-// require('dotenv').config(); // reads the file : `.env`
-// const cors  = require('cors');
+const express = require('express');
+require('dotenv').config(); //Reads the file: '.env'
+const cors = require('cors');
 
-// // ============= Global variables =====================
+// ============= Global variables =====================
 
-// const PORT = process.env.PORT || 3003; // short cuircuiting and choosing PORT if it exists in the env, otherwise 3003
-// const app = express();
-// app.use(cors()); // enables the server to talk to local things
+const PORT = process.env.PORT || 3003; // Short cuircuiting and choosing PORT if it exists in the env, otherwise 3003
+const app = express();
+app.use(cors()); //Enables the server to talk to local machines
 
-// // ================ Routes =============================
 
-// // from the front end : $.ajax('http://localhost:3000/location', options)
-// // because my front end makes a request to the /location route, my route needs the name `/location`
+// ================ Routes =============================
 
-// app.get('/location', (request, response) =>{
-//   // load json from file
-//   // pass it through the constructor
-//   // send it to the front end
+// from the front end : $.ajax('http://localhost:3000/location', options)
+// because my front end makes a request to the /location route, my route needs the name `/location`
 
-//   const jsonObject = require('./data/location.json');
-//   const constructedLocation = new Location(jsonObject);
+app.get('/location', (request, response) =>{
+  // load json from file
+  // pass it through the constructor
+  // send it to the front end
 
-//   response.send(constructedLocation);
-// });
+  const jsonObject = require('./data/location.json');
+  const constructedLocation = new Location(jsonObject);
+
+  response.send(constructedLocation);
+});
 
 
 // // Process for a route

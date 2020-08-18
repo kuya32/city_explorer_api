@@ -18,9 +18,9 @@ app.get('/location', (req, res) => {
   const createdLocation = new Location(jsonObj);
 
 
-  if(req.query.city !== 'Lynwood') {
-    return res.status(500).send('Try typing in `Lynnwood`');
-  }
+  // if(req.query.city !== 'Lynnwood') {
+  //   return res.status(500).send('Try typing in `Lynnwood`');
+  // }
 
   res.send(createdLocation);
 });
@@ -31,7 +31,7 @@ function sendWeatherData(req, res) {
   const jsonObj2 = require('./data/weather.json');
   const newArray = [];
 
-  jsonObj2.forEach(objInJson => {
+  jsonObj2.data.forEach(objInJson => {
     const newWeather = new Weather(objInJson);
     newArray.push(newWeather);
   });

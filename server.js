@@ -34,27 +34,27 @@ app.get('/location', (req, res) => {
 app.get('/weather', sendWeatherData);
 
 function sendWeatherData(req, res) {
-  const cityToSearchFor = req.query.city;
+  const cityToSearchFor = req.query.formatted_query.split(',')[0];
   const weatherKey = process.env.WEATHER_API_KEY;
-  const urlToSearch = `https://api.weatherbit.io/v2.0/current?city=${cityToSearchFor}&key=${weatherKey}`;
-  console.log(urlToSearch);
+  const urlToSearch = `https://api.weatherbit.io/v2.0/forecast/daily?city=${cityToSearchFor}&key=${weatherKey}`;
+
   superagent.get(urlToSearch)
 
     .set('key', weatherKey)
     .then(resultFromWeatherbit => {
       const jsonObj2 = resultFromWeatherbit.body;
-      // console.log(jsonObj2);
       let weatherArray = jsonObj2.data.map(objInJson => {
         const newWeather = new Weather(objInJson);
         return newWeather;
       });
+      weatherArray = weatherArray.slice(0,8);
       res.send(weatherArray);
     });
 }
 
 // ================ Trail API Route =============================
 
-app.get('trails', sendTrailData);
+app.get('/trails', sendTrailData);
 
 function sendTrailData(req, res) {
   const hikeKey = process.env.TRAIL_API_KEY;
@@ -66,11 +66,12 @@ function sendTrailData(req, res) {
     .set('key', hikeKey)
     .then(resultFromHiking => {
       const jsonObj3 = resultFromHiking.body;
-      console.log(jsonObj3);
+      // console.log(jsonObj3);
       let hikeArray = jsonObj3.trails.map(objInJson => {
         const newHike = new Hike(objInJson);
         return newHike;
       });
+      hikeArray = hikeArray.slice(0, 10);
       res.send(hikeArray);
     });
 }
@@ -78,27 +79,28 @@ function sendTrailData(req, res) {
 // =================== All other functions ===================
 
 function Location(superagentResultArray) {
+  // this.search_query = superagentResultArray[0].
   this.formatted_query = superagentResultArray[0].display_name;
   this.latitude = superagentResultArray[0].lat;
   this.longitude = superagentResultArray[0].lon;
 }
 
 function Weather(jsonObj2) {
-  this.forecast = jsonObj2[0].weather.description;
-  this.time = jsonObj2[0].valid_date;
+  this.forecast = jsonObj2.weather.description;
+  this.time = jsonObj2.valid_date;
 }
 
 function Hike(jsonObj3) {
-  this.name = jsonObj3.trails[0].name;
-  this.location = jsonObj3.trails[0].location;
-  this.length = jsonObj3.trails[0].length;
-  this.stars = jsonObj3.trails[0].stars;
-  this.star_votes = jsonObj3.trails[0].starVotes;
-  this.summary = jsonObj3.trails[0].summary;
-  this.conditions = jsonObj3.trails[0].conditionStatus;
-  this.condition_date = jsonObj3.trails[0].conditionDate;
-  this.condition_time = jsonObj3.trails[0].conditionDetails;
+  this.name = jsonObj3.name;
+  this.location = jsonObj3.location;
+  this.length = jsonObj3.length;
+  this.stars = jsonObj3.stars;
+  this.star_votes = jsonObj3.starVotes;
+  this.summary = jsonObj3.summary;
+  this.conditions = jsonObj3.conditionStatus;
+  this.condition_date = jsonObj3.conditionDate;
+  this.condition_time = jsonObj3.conditionDetails;
 }
 // ================ Start the server ==========================
 
-app.listen(PORT);
+app.listen(PORT, () => console.log(`up on ${PORT}, its over ${PORT}!!!`));

@@ -83,3 +83,31 @@
 - Start time: 12:00 AM
 - Finish time: 2:00 AM
 - Actual time needed to complete: 2 hours
+
+## Feature 9: Database
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:
+
+## Feature 10: Server
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:
+
+## Feature 11: Deploy
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:
+
+## Feature 12: Stretch
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:

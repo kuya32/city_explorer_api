@@ -5,7 +5,6 @@ require('dotenv').config();
 const cors = require('cors');
 const superagent = require('superagent');
 const pg = require('pg');
-const { response } = require('express');
 
 // ==================== Global variables ====================
 
@@ -15,8 +14,8 @@ const locationKey = process.env.GEOCODE_API_KEY;
 const databaseUrl = process.env.DATABASE_URL;
 const weatherKey = process.env.WEATHER_API_KEY;
 const hikeKey = process.env.TRAIL_API_KEY;
-const movieKey = process.env.MOVIE_API_KEY;
-const resturantKey = process.env.YELP_API_KEY;
+// const movieKey = process.env.MOVIE_API_KEY;
+const yelpKey = process.env.YELP_API_KEY;
 
 // ==================== Express Configs ====================
 app.use(cors());
@@ -47,10 +46,9 @@ function getLocation(req, res) {
           .then(results => {
             const superagentResultArray = results.body[0];
             const createdLocation = new Location(superagentResultArray);
-            res.send(createdLocation);
+            // res.send(createdLocation);
 
             const city = createdLocation.search_query.toLowerCase();
-            console.log(city);
             const fullCity = createdLocation.formatted_query;
             const lat = parseFloat(createdLocation.latitude);
             const lon = parseFloat(createdLocation.longitude);
@@ -58,7 +56,7 @@ function getLocation(req, res) {
             const locationArray = [city, fullCity, lat, lon];
 
             client.query(queryString, locationArray)
-              .then (() => response.status(201).send('Created a new location'))
+              .then (() => res.status(201).send(createdLocation))
               .catch(error => {
                 res.status(500).send(error.message);
               });
@@ -119,42 +117,42 @@ function sendTrailData(req, res) {
 
 // ==================== Movies API Route ====================
 
-app.get('/movies', sendMovieData);
+// app.get('/movies', sendMovieData);
 
-function sendMovieData(req, res) { //<--I need to work on finding a request
-  const urlToSearch = `https://api.themoviedb.org/3/movie/550?api_key=${movieKey}&callback=test`;//<--I am not sure if this is the right URL for my search
+// function sendMovieData(req, res) { //<--I need to work on finding a request
+//   const urlToSearch = `https://api.themoviedb.org/3/movie/550?api_key=${movieKey}&callback=test`;//<--I am not sure if this is the right URL for my search
 
-  superagent.get(urlToSearch)
-    .set('key', movieKey)
-    .then(resultFromMovies => {
-      const jsonObj4 = resultFromMovies.body;
-      // console.log(jsonObj4);
-      let movieArray = jsonObj4.map(objInJson => {//<--Need more information from website URL
-        const newMovie = new Movie(objInJson);
-        return newMovie;
-      });
-      res.send(movieArray);
-    })
-    .catch(error => {
-      res.status(500).send(error.message);
-    });
-}
+//   superagent.get(urlToSearch)
+//     .set('key', movieKey)
+//     .then(resultFromMovies => {
+//       const jsonObj4 = resultFromMovies.body;
+//       // console.log(jsonObj4);
+//       let movieArray = jsonObj4.map(objInJson => {//<--Need more information from website URL
+//         const newMovie = new Movie(objInJson);
+//         return newMovie;
+//       });
+//       res.send(movieArray);
+//     })
+//     .catch(error => {
+//       res.status(500).send(error.message);
+//     });
+// }
 
 // ==================== YELP API Route ====================
 
-app.get('/restaurants', sendRestaurantData);
+app.get('/yelp', sendRestaurantData);
 
 function sendRestaurantData(req,res) {
   const latInfo = req.query.latitude;
   const lonInfo = req.query.longitude;
   // const pageStart = req.query.page * 20; <--Still working on pagination
-  const urlToSearch = `https://api.yelp.com/v3/businesses/search?term=delis&latitude=${latInfo}&longitude=${lonInfo}`; //<--Not sure if I am using the right URL for the search
-
+  const urlToSearch = `https://api.yelp.com/v3/businesses/search?latitude=${latInfo}&longitude=${lonInfo}` ; //<--Not sure if I am using the right URL for the search
   superagent.get(urlToSearch)
-    .set('key', resturantKey)
+    .set('Authorization', `Bearer ${yelpKey}`)
     .then(resultFromRestaurant => {
+      console.log(resultFromRestaurant.body);
       const jsonObj5 = resultFromRestaurant.body;
-      // console.log(jsonObj5);
+      console.log(jsonObj5);
       let restaurantArray = jsonObj5.businesses.map(objInJson => { //Once I am able to get ahold of the YELP data, then I will determine the resaurant array. I think it is businesses
         const newRestaurant = new Restaurant(objInJson);
         return newRestaurant;
@@ -193,15 +191,15 @@ function Hike(jsonObj3) {
   this.condition_time = jsonObj3.conditionDate.split(' ')[1];
 }
 
-function Movie (jsonObj4) {
-  this.title = jsonObj4.title;
-  this.overview = jsonObj4.overview;
-  this.average_votes = jsonObj4.vote.average;
-  this.total_votes = jsonObj4.vote_count;
-  this.image_url = jsonObj4.backdrop_path;
-  this.popularity = jsonObj4.popularity;
-  this.released_on = jsonObj4.release_date;
-}
+// function Movie (jsonObj4) {
+//   this.title = jsonObj4.title;
+//   this.overview = jsonObj4.overview;
+//   this.average_votes = jsonObj4.vote.average;
+//   this.total_votes = jsonObj4.vote_count;
+//   this.image_url = jsonObj4.backdrop_path;
+//   this.popularity = jsonObj4.popularity;
+//   this.released_on = jsonObj4.release_date;
+// }
 
 function Restaurant (jsonObj5) {
   this.name = jsonObj5.name;

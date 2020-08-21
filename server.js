@@ -15,6 +15,8 @@ const locationKey = process.env.GEOCODE_API_KEY;
 const databaseUrl = process.env.DATABASE_URL;
 const weatherKey = process.env.WEATHER_API_KEY;
 const hikeKey = process.env.TRAIL_API_KEY;
+const movieKey = process.env.MOVIE_API_KEY;
+const resturantKey = process.env.YELP_API_KEY;
 
 // ==================== Express Configs ====================
 app.use(cors());
@@ -26,51 +28,44 @@ client.on('error', (error) => console.error(error));
 
 // ==================== Location API Route ====================
 
-app.get('/location', (req, res) => {
+app.get('/location', getLocation);
 
-  const select = 'SELECT * FROM cities;';
-  const cityToSearchFor = req.query.city;
-  console.log(cityToSearchFor);
+function getLocation(req, res) {
+  const cityToSearchFor = req.query.city.toLowerCase();
 
-  client.query(select)
+  const select = 'SELECT * FROM cities WHERE search_query=$1';
+
+  client.query(select, [cityToSearchFor])
     .then(resultsFromSql => {
 
-      let existingValues = resultsFromSql.rows.map(index => index.search_query.toLowerCase());
-      console.log(existingValues);
-      if(existingValues.includes(cityToSearchFor)){
-        client.query(`SELECT * FROM cities WHERE search_query = '${cityToSearchFor}'`)
-          .then(storeData => {
-            res.send(storeData.rows[0]);
-          });
+      if(resultsFromSql.rowCount === 1) {
+        res.send(resultsFromSql.rows[0]);
       } else {
-
         const urlToSearch = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${cityToSearchFor}&format=json`;
 
         superagent.get(urlToSearch)
-          .then(randomStuff => {
-            const superagentResultArray = randomStuff.body;
+          .then(results => {
+            const superagentResultArray = results.body[0];
             const createdLocation = new Location(superagentResultArray);
             res.send(createdLocation);
-            const city = createdLocation.search_query;
+
+            const city = createdLocation.search_query.toLowerCase();
+            console.log(city);
             const fullCity = createdLocation.formatted_query;
             const lat = parseFloat(createdLocation.latitude);
             const lon = parseFloat(createdLocation.longitude);
             const queryString = 'INSERT INTO cities (search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4)';
             const locationArray = [city, fullCity, lat, lon];
+
             client.query(queryString, locationArray)
-              .then (() => {
-                response.status(201).send('Created a new location');
-              })
+              .then (() => response.status(201).send('Created a new location'))
               .catch(error => {
                 res.status(500).send(error.message);
               });
-          })
-          .catch(error => {
-            res.status(500).send(error.message);
           });
       }
     });
-});
+}
 
 // ==================== Weather API Route ====================
 
@@ -122,13 +117,62 @@ function sendTrailData(req, res) {
     });
 }
 
+// ==================== Movies API Route ====================
+
+app.get('/movies', sendMovieData);
+
+function sendMovieData(req, res) { //<--I need to work on finding a request
+  const urlToSearch = `https://api.themoviedb.org/3/movie/550?api_key=${movieKey}&callback=test`;//<--I am not sure if this is the right URL for my search
+
+  superagent.get(urlToSearch)
+    .set('key', movieKey)
+    .then(resultFromMovies => {
+      const jsonObj4 = resultFromMovies.body;
+      // console.log(jsonObj4);
+      let movieArray = jsonObj4.map(objInJson => {//<--Need more information from website URL
+        const newMovie = new Movie(objInJson);
+        return newMovie;
+      });
+      res.send(movieArray);
+    })
+    .catch(error => {
+      res.status(500).send(error.message);
+    });
+}
+
+// ==================== YELP API Route ====================
+
+app.get('/restaurants', sendRestaurantData);
+
+function sendRestaurantData(req,res) {
+  const latInfo = req.query.latitude;
+  const lonInfo = req.query.longitude;
+  // const pageStart = req.query.page * 20; <--Still working on pagination
+  const urlToSearch = `https://api.yelp.com/v3/businesses/search?term=delis&latitude=${latInfo}&longitude=${lonInfo}`; //<--Not sure if I am using the right URL for the search
+
+  superagent.get(urlToSearch)
+    .set('key', resturantKey)
+    .then(resultFromRestaurant => {
+      const jsonObj5 = resultFromRestaurant.body;
+      // console.log(jsonObj5);
+      let restaurantArray = jsonObj5.businesses.map(objInJson => { //Once I am able to get ahold of the YELP data, then I will determine the resaurant array. I think it is businesses
+        const newRestaurant = new Restaurant(objInJson);
+        return newRestaurant;
+      });
+      res.send(restaurantArray);
+    })
+    .catch(error => {
+      res.status(500).send(error.message);
+    });
+}
+
 // ==================== All other functions ====================
 
 function Location(superagentResultArray) {
-  this.search_query = superagentResultArray[0].display_name.split(',')[0];
-  this.formatted_query = superagentResultArray[0].display_name;
-  this.latitude = superagentResultArray[0].lat;
-  this.longitude = superagentResultArray[0].lon;
+  this.search_query = superagentResultArray.display_name.split(',')[0];
+  this.formatted_query = superagentResultArray.display_name;
+  this.latitude = superagentResultArray.lat;
+  this.longitude = superagentResultArray.lon;
 }
 
 function Weather(jsonObj2) {
@@ -148,6 +192,25 @@ function Hike(jsonObj3) {
   this.condition_date = jsonObj3.conditionDate.split(' ')[0];
   this.condition_time = jsonObj3.conditionDate.split(' ')[1];
 }
+
+function Movie (jsonObj4) {
+  this.title = jsonObj4.title;
+  this.overview = jsonObj4.overview;
+  this.average_votes = jsonObj4.vote.average;
+  this.total_votes = jsonObj4.vote_count;
+  this.image_url = jsonObj4.backdrop_path;
+  this.popularity = jsonObj4.popularity;
+  this.released_on = jsonObj4.release_date;
+}
+
+function Restaurant (jsonObj5) {
+  this.name = jsonObj5.name;
+  this.image_url = jsonObj5.image_url;
+  this.price = jsonObj5.price;
+  this.rating = jsonObj5.rating;
+  this.url = jsonObj5.url;
+}
+
 // ==================== Start the server ====================
 client.connect()
   .then(() => {

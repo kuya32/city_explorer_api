@@ -111,3 +111,24 @@
 - Start time: N/A
 - Finish time: N/A
 - Actual time needed to complete: N/A
+
+## Feature 13: Movies
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:
+
+## Feature 14: Yelp
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:
+
+## Feature 15: Pagination
+
+- Estimate of time needed to complete: 1 hour
+- Start time:
+- Finish time:
+- Actual time needed to complete:

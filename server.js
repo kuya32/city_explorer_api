@@ -14,7 +14,7 @@ const locationKey = process.env.GEOCODE_API_KEY;
 const databaseUrl = process.env.DATABASE_URL;
 const weatherKey = process.env.WEATHER_API_KEY;
 const hikeKey = process.env.TRAIL_API_KEY;
-// const movieKey = process.env.MOVIE_API_KEY;
+const movieKey = process.env.MOVIE_API_KEY;
 const yelpKey = process.env.YELP_API_KEY;
 
 // ==================== Express Configs ====================
@@ -117,26 +117,26 @@ function sendTrailData(req, res) {
 
 // ==================== Movies API Route ====================
 
-// app.get('/movies', sendMovieData);
+app.get('/movies', sendMovieData);
 
-// function sendMovieData(req, res) { //<--I need to work on finding a request
-//   const urlToSearch = `https://api.themoviedb.org/3/movie/550?api_key=${movieKey}&callback=test`;//<--I am not sure if this is the right URL for my search
+function sendMovieData(req, res) {
+  const movieLocation = req.query.search_query;
+  const urlToSearch = `https://api.themoviedb.org/3/search/movie?api_key=${movieKey}&language=en-US&query=${movieLocation}&page=1&include_adult=false`;
 
-//   superagent.get(urlToSearch)
-//     .set('key', movieKey)
-//     .then(resultFromMovies => {
-//       const jsonObj4 = resultFromMovies.body;
-//       // console.log(jsonObj4);
-//       let movieArray = jsonObj4.map(objInJson => {//<--Need more information from website URL
-//         const newMovie = new Movie(objInJson);
-//         return newMovie;
-//       });
-//       res.send(movieArray);
-//     })
-//     .catch(error => {
-//       res.status(500).send(error.message);
-//     });
-// }
+  superagent.get(urlToSearch)
+    .set('key', movieKey)
+    .then(resultFromMovies => {
+      const jsonObj4 = resultFromMovies.body;
+      let movieArray = jsonObj4.results.map(objInJson => {
+        const newMovie = new Movie(objInJson);
+        return newMovie;
+      });
+      res.send(movieArray);
+    })
+    .catch(error => {
+      res.status(500).send(error.message);
+    });
+}
 
 // ==================== YELP API Route ====================
 
@@ -146,17 +146,18 @@ function sendRestaurantData(req,res) {
   const latInfo = req.query.latitude;
   const lonInfo = req.query.longitude;
   // const pageStart = req.query.page * 20; <--Still working on pagination
-  const urlToSearch = `https://api.yelp.com/v3/businesses/search?latitude=${latInfo}&longitude=${lonInfo}` ; //<--Not sure if I am using the right URL for the search
+  const urlToSearch = `https://api.yelp.com/v3/businesses/search?latitude=${latInfo}&longitude=${lonInfo}&limit=50&offset=10` ;
+
   superagent.get(urlToSearch)
     .set('Authorization', `Bearer ${yelpKey}`)
     .then(resultFromRestaurant => {
-      console.log(resultFromRestaurant.body);
       const jsonObj5 = resultFromRestaurant.body;
       console.log(jsonObj5);
-      let restaurantArray = jsonObj5.businesses.map(objInJson => { //Once I am able to get ahold of the YELP data, then I will determine the resaurant array. I think it is businesses
+      let restaurantArray = jsonObj5.businesses.map(objInJson => {
         const newRestaurant = new Restaurant(objInJson);
         return newRestaurant;
       });
+      restaurantArray = restaurantArray.slice(0,5);
       res.send(restaurantArray);
     })
     .catch(error => {
@@ -191,15 +192,15 @@ function Hike(jsonObj3) {
   this.condition_time = jsonObj3.conditionDate.split(' ')[1];
 }
 
-// function Movie (jsonObj4) {
-//   this.title = jsonObj4.title;
-//   this.overview = jsonObj4.overview;
-//   this.average_votes = jsonObj4.vote.average;
-//   this.total_votes = jsonObj4.vote_count;
-//   this.image_url = jsonObj4.backdrop_path;
-//   this.popularity = jsonObj4.popularity;
-//   this.released_on = jsonObj4.release_date;
-// }
+function Movie (jsonObj4) {
+  this.title = jsonObj4.title;
+  this.overview = jsonObj4.overview;
+  this.average_votes = jsonObj4.vote_average;
+  this.total_votes = jsonObj4.vote_count;
+  this.image_url = jsonObj4.poster_path;
+  this.popularity = jsonObj4.popularity;
+  this.released_on = jsonObj4.release_date;
+}
 
 function Restaurant (jsonObj5) {
   this.name = jsonObj5.name;
